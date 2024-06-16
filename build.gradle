@@ -1,0 +1,71 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.beryx.jlink' version '2.24.4'
+}
+
+version '0.1'
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    junitVersion = '5.8.1'
+}
+
+sourceCompatibility = '17'
+targetCompatibility = '17'
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+application {
+    mainModule = 'bl00dy_c0d3_.echovr_installer'
+    mainClass = 'bl00dy_c0d3_.echovr_installer.EchoVRInstaller'
+}
+
+dependencies {
+    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+jar {
+    manifest {
+        attributes "Main-Class": "bl00dy_c0d3_.echovr_installer.EchoVRInstaller"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+jlink {
+    jpackage {
+        appVersion = '0.1'
+        installerName = 'Echo_VR_Installer'
+        icon = 'C:\\Users\\Marcel\\Documents\\Java\\EchoVR_Installer\\icon.ico'
+
+
+        installerOptions = [
+                '--app-version', '0.1',
+                '--vendor', 'bl00dy-c0d3',
+                '--name', 'Echo_VR_Installer',
+                '--install-dir', 'EchoVRInstaller',
+                '--icon', 'C:\\Users\\Marcel\\Documents\\Java\\EchoVR_Installer\\icon.ico',
+                '--win-dir-chooser',
+                '--win-shortcut',
+                '--win-menu',
+                '--win-menu-group', 'EchoVRInstaller',
+        ]
+    }
+}
