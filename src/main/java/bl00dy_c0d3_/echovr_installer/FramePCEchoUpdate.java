@@ -7,13 +7,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.Serial;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 import static bl00dy_c0d3_.echovr_installer.Helpers.*;
 
-public class FramePCDownload extends JDialog {
+public class FramePCEchoUpdate extends JDialog {
     Downloader downloader = null;
     FrameMain frameMain = null;
     int frameWidth = 700;
@@ -23,7 +27,7 @@ public class FramePCDownload extends JDialog {
     static boolean mac = System.getProperty("os.name").toLowerCase().startsWith("mac");
     static Path tempPath = Paths.get(System.getProperty("java.io.tmpdir"));
     //Constructor
-    public FramePCDownload(FrameMain frameMain){
+    public FramePCEchoUpdate(FrameMain frameMain){
         this.frameMain = frameMain;
         initComponents();
         this.setVisible(true);
@@ -50,9 +54,6 @@ public class FramePCDownload extends JDialog {
         this.setContentPane(back);
 
 
-        //Note before installing Echo
-        JOptionPane.showMessageDialog(this, "<html>If you own Echo on your Meta account, first download it officially, start it once and choose the path to the installation on the next screen!<br>If you don't own Echo on your account just proceed and use the patch afterwards!</html>", "Notification", JOptionPane.INFORMATION_MESSAGE);
-
         SpecialLabel labelPcDownloadPath = new SpecialLabel(path, 14);
         labelPcDownloadPath.setLocation(170,130);
         labelPcDownloadPath.setSize(490, 25);
@@ -61,13 +62,15 @@ public class FramePCDownload extends JDialog {
         back.add(labelPcDownloadPath);
 
 
-        SpecialButton pcChooseOriginalPath = new SpecialButton("<html>Auto choose original<br>Oculus path</html>", "button_up_middle.png", "button_down_middle.png", "button_highlighted_middle.png", 14);
+        SpecialButton pcChooseOriginalPath = new SpecialButton("<html>Auto choose Echo path</html>", "button_up_middle.png", "button_down_middle.png", "button_highlighted_middle.png", 18);
         pcChooseOriginalPath.setLocation(20, 70);
         pcChooseOriginalPath.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent event) {
-                String newPath = checkForAdminAndOculusPath(outFrame);
+                String newPath = checkForEchoOnKnownPaths(outFrame);
                 if (!newPath.matches("")) {
-                    labelPcDownloadPath.setText(newPath + "Software\\Software\\");
+                    System.out.println("Echo found at path: " + newPath);
+                    JOptionPane.showMessageDialog(outFrame, "<html>echovr.exe was found at the following path. If thats wrong, set the path manually!!!<br>" + newPath + "</html>", "Notification", JOptionPane.INFORMATION_MESSAGE);
+                    labelPcDownloadPath.setText(newPath);
                     outFrame.repaint();
                 }
             }
@@ -75,7 +78,7 @@ public class FramePCDownload extends JDialog {
         back.add(pcChooseOriginalPath);
 
 
-        SpecialLabel labelPcOculusPathExplaination = new SpecialLabel("Choose this to use the original Oculus path", 14);
+        SpecialLabel labelPcOculusPathExplaination = new SpecialLabel("Choose this to search Echo on known paths", 14);
         labelPcOculusPathExplaination.setLocation(252,70);
         back.add(labelPcOculusPathExplaination);
 
@@ -90,9 +93,12 @@ public class FramePCDownload extends JDialog {
         back.add(pcChoosePath);
 
 
-        SpecialLabel labelPcDownloadPathExplaination = new SpecialLabel("Specify the Path for the Echo Installation or leave it as it is.", 14);
+        SpecialLabel labelPcDownloadPathExplaination = new SpecialLabel("Specify the echovr.exe location", 14);
         labelPcDownloadPathExplaination.setLocation(20,160);
+        SpecialLabel labelPcDownloadPathExplaination2 = new SpecialLabel("Its located inside your echo install folder in  \"bin/win10\"", 14);
+        labelPcDownloadPathExplaination2.setLocation(20,187);
         back.add(labelPcDownloadPathExplaination);
+        back.add(labelPcDownloadPathExplaination2);
 
 
         SpecialLabel labelPcProgress1 = new SpecialLabel("Progress =", 17);
@@ -112,7 +118,7 @@ public class FramePCDownload extends JDialog {
         back.add(labelPcProgress2);
 
 
-        FramePCDownload thisFrame = this;
+        FramePCEchoUpdate thisFrame = this;
         SpecialButton pcStartDownload = new SpecialButton("Start Download", "button_up_middle.png", "button_down_middle.png", "button_highlighted_middle.png", 17);
         pcStartDownload.setLocation(20, 230);
         pcStartDownload.addMouseListener(new MouseAdapter() {
@@ -123,31 +129,36 @@ public class FramePCDownload extends JDialog {
                 }
                 pcStartDownload.changeText("Restart Download");
 
-                JOptionPane.showMessageDialog(null, "The Download will start after pressing OK.", "Download started", JOptionPane.INFORMATION_MESSAGE);
-                Thread downloadThread1 = new Thread(() -> {
-                    downloader = new Downloader();
-                    downloader.setOnCompleteListener(() -> {
-                        SwingUtilities.invokeLater(() -> {
-                            String[] updateFiles = getFileAndReturnArray("https://echo.marceldomain.de:6969/updates/files", "updateFiles");
-                            String URL = "https://echo.marceldomain.de:6969/updates/";
-                            //Download all updated files
-                            for (String file : updateFiles) {
-                                System.out.println("Updatefile:" + file);
+                String filePath  = labelPcDownloadPath.getText();
+                if (Files.exists(Path.of(filePath + "echovr.exe"))) {
+                    System.out.println("echovr.exe does exist: " + filePath);
+                    String[] updateFiles = getFileAndReturnArray("https://echo.marceldomain.de:6969/updates/files", "updateFiles");
+                    String URL = "https://echo.marceldomain.de:6969/updates/";
+                    //Download all updated files
+                    for (String file : updateFiles) {
+                        System.out.println("Updatefile:" + file);
 
-                                Thread downloadThread2 = new Thread(() -> {
-                                    downloader = new Downloader();
-                                    downloader.startDownload(URL + file, labelPcDownloadPath.getText() + "/ready-at-dawn-echo-arena/bin/win10", file, labelPcProgress2, thisFrame, frameMain, 1, true, -1, true);
+                        Thread downloadThread1 = new Thread(() -> {
+                            downloader = new Downloader();
+                            downloader.setOnCompleteListener(() -> {
+                                SwingUtilities.invokeLater(() -> {
+                                    JOptionPane.showMessageDialog(null, "Updating is successfull! ", "Update done", JOptionPane.INFORMATION_MESSAGE);
+
                                 });
-
-                                downloadThread2.start();  // This runs the download in a separate thread
-                                System.out.println("UPDATE after regular install is DONE");
-                            }
+                            });
+                            downloader.startDownload(URL + file, labelPcDownloadPath.getText(), file, labelPcProgress2, thisFrame, frameMain, 1, true, -1, true);
                         });
-                    });
-                    downloader.startDownload("ready-at-dawn-echo-arena.zip", labelPcDownloadPath.getText(), "ready-at-dawn-echo-arena.zip",  labelPcProgress2, thisFrame, frameMain, 0, false, 0, false);
-                });
 
-                downloadThread1.start();  // This runs the download in a separate thread
+                        downloadThread1.start();  // This runs the download in a separate thread
+                    }
+                } else {
+                    System.out.println("echovr.exe does not exist: " + filePath);
+                    JOptionPane.showMessageDialog(null, "Wrong path to echovr.exe. Choose the right path please!", "Wrong path", JOptionPane.INFORMATION_MESSAGE);
+
+                }
+
+
+
             }
         });
         back.add(pcStartDownload);
@@ -163,7 +174,7 @@ public class FramePCDownload extends JDialog {
     }
 
     //Lädt eine GUI-Grafik und gibt sie zurück:
-    private java.awt.Image loadGUI(String imageName) {
+    private Image loadGUI(String imageName) {
         URL imageURL = getClass().getClassLoader().getResource(imageName);
         if (imageURL == null) return null;
         else return (new ImageIcon(imageURL, imageName)).getImage();
