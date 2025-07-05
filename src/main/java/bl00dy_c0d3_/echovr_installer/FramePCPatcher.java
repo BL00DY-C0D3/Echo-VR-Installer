@@ -37,13 +37,13 @@ public class FramePCPatcher extends JDialog {
         this.setContentPane(back);
 
 
-        SpecialLabel discordLink = new SpecialLabel("1. Join the Echo VR Patcher Disocrd Server:", 16);
+        SpecialLabel discordLink = new SpecialLabel("1. Join the Echo VR Patcher Discord Server:", 16);
         discordLink.setLocation(40, 40);
         back.add(discordLink);
 
 
         //SpecialHyperlink hyperlinkPC = new SpecialHyperlink(60, 70, "<html><a href=''>Join the Echo VR Patcher Discord-Server</a></html>", "https://discord.gg/bMpsva6fmA");
-        SpecialHyperlink hyperlinkPC = new SpecialHyperlink(40, 95, "Click on me to join the Echo VR Patcher Discord-Server", "https://discord.gg/bMpsva6fmA", 14);
+        SpecialHyperlink hyperlinkPC = new SpecialHyperlink(40, 95, "Click on me to join the Echo VR Patcher Discord Server", "https://discord.gg/MuUwKS2tc4", 14);
         back.add(hyperlinkPC);
 
         SpecialLabel react_discord1 = new SpecialLabel("2. React to the message  on Discord", 16);
